@@ -3,10 +3,14 @@ import os
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
 
-# Environment variables (set these in Render)
-BOT_TOKEN = os.environ.get("8403795351:AAFsCY7rLCWQbPsVXhuskHwxAtjgXxG4Q8o")
-TARGET_GROUP_ID = int(os.environ.get("-1003457551207"))
-ALLOWED_USER_IDS = [int(os.environ.get("6575589039"))]
+# 🔴 HARD-CODED VALUES (EDIT THESE)
+BOT_TOKEN = "8403795351:AAFsCY7rLCWQbPsVXhuskHwxAtjgXxG4Q8o"
+
+TARGET_GROUP_ID = -1003457551207
+
+ALLOWED_USER_IDS = [
+    6575589039
+]
 
 # Command: /start
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):

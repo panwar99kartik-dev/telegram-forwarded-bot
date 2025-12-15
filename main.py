@@ -34,30 +34,26 @@ async def off_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def forward(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
-    if not is_allowed(user):
+
+    # Only allow messages from allowed users
+    if user.id not in ALLOWED_USER_IDS:
         return
-
-    if context.user_data.get("enabled") is False:
-        return
-
-    sender = user.full_name
-    uname = f"@{user.username}" if user.username else ""
-
-    prefix = f"📨 Sent by: {sender} {uname}\n\n"
 
     try:
+        # If text message
         if update.message.text:
             await context.bot.send_message(
                 chat_id=TARGET_GROUP_ID,
-                text=prefix + update.message.text
+                text=update.message.text
             )
+        # If media (photo/video/etc)
         else:
             await update.message.copy(
-                chat_id=TARGET_GROUP_ID,
-                caption=prefix + (update.message.caption or "")
+                chat_id=TARGET_GROUP_ID
             )
     except:
         pass
+
 
 app = ApplicationBuilder().token(BOT_TOKEN).build()
 

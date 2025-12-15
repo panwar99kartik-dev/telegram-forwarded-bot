@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: telegram-bot
+    env: python
+    plan: free
+    buildCommand: |
+      pip uninstall -y telegram python-telegram-bot
+      pip install python-telegram-bot==20.7
+    startCommand: python bot.py
+    runtime: python-3.11.9
+    

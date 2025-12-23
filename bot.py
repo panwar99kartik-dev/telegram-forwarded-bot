@@ -47,7 +47,7 @@ def list_groups(update, context):
         update.message.reply_text("I couldn't find any groups where I'm an admin.")
 
 def main():
-    updater = Updater("YOUR_TELEGRAM_BOT_TOKEN", use_context=True)
+    updater = Updater("8403795351:AAFsCY7rLCWQbPsVXhuskHwxAtjgXxG4Q8o", use_context=True)
     dp = updater.dispatcher
 
     dp.add_handler(CommandHandler("start", start))

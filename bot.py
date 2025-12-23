@@ -1,43 +1,63 @@
-from telegram import Update
-from telegram.ext import ApplicationBuilder, MessageHandler, CommandHandler, ContextTypes, filters
-import config
+from telegram.ext import Updater, CommandHandler
+from telegram import Bot
+import logging
 
-bot_status = True   # ON / OFF
+# बॉट को सही तरीके से लॉग करने के लिए
+logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_user.id == config.OWNER_ID:
-        await update.message.reply_text("✅ Bot ready hai")
+active = False
+selected_group = None
 
-async def on_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    global bot_status
-    if update.effective_user.id == config.OWNER_ID:
-        bot_status = True
-        await update.message.reply_text("🟢 Bot ON ho gaya")
+def start(update, context):
+    update.message.reply_text('Hello! Use /on to activate, /off to deactivate, /select to select a group, and /listgroups to see your groups.')
 
-async def off_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    global bot_status
-    if update.effective_user.id == config.OWNER_ID:
-        bot_status = False
-        await update.message.reply_text("🔴 Bot OFF ho gaya")
+def turn_on(update, context):
+    global active
+    active = True
+    update.message.reply_text('Bot is now active!')
 
-async def forward_to_group(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_user.id != config.OWNER_ID:
-        return
-    if not bot_status:
-        return
+def turn_off(update, context):
+    global active
+    active = False
+    update.message.reply_text('Bot is now inactive!')
 
-    await context.bot.copy_message(
-        chat_id=config.GROUP_ID,
-        from_chat_id=update.effective_chat.id,
-        message_id=update.message.message_id
-    )
+def select_group(update, context):
+    global selected_group
+    if context.args:
+        selected_group = context.args[0]
+        update.message.reply_text(f'Selected group is now: {selected_group}')
+    else:
+        update.message.reply_text('Please provide a group name or ID.')
 
-app = ApplicationBuilder().token(config.BOT_TOKEN).build()
+def list_groups(update, context):
+    bot: Bot = context.bot
+    user_id = update.message.from_user.id
+    groups = []
 
-app.add_handler(CommandHandler("start", start))
-app.add_handler(CommandHandler("on", on_cmd))
-app.add_handler(CommandHandler("off", off_cmd))
-app.add_handler(MessageHandler(filters.ALL & filters.ChatType.PRIVATE, forward_to_group))
+    for dialog in bot.get_updates():
+        chat = dialog.effective_chat
+        if chat.type in ['group', 'supergroup']:
+            member = bot.get_chat_member(chat.id, user_id)
+            if member.status in ['administrator', 'creator']:
+                groups.append(chat.title)
 
-print("🤖 Bot chal raha hai...")
-app.run_polling()
+    if groups:
+        update.message.reply_text("Groups where I'm admin:\n" + "\n".join(groups))
+    else:
+        update.message.reply_text("I couldn't find any groups where I'm an admin.")
+
+def main():
+    updater = Updater("YOUR_TELEGRAM_BOT_TOKEN", use_context=True)
+    dp = updater.dispatcher
+
+    dp.add_handler(CommandHandler("start", start))
+    dp.add_handler(CommandHandler("on", turn_on))
+    dp.add_handler(CommandHandler("off", turn_off))
+    dp.add_handler(CommandHandler("select", select_group))
+    dp.add_handler(CommandHandler("listgroups", list_groups))
+
+    updater.start_polling()
+    updater.idle()
+
+if __name__ == '__main__':
+    main()
